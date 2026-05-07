@@ -10,6 +10,12 @@ const {
   deleteLead,
 } = require("../controllers/leadController");
 
+const {
+  addNote,
+  getNotesByLead,
+  deleteNote,
+} = require("../controllers/noteController");
+
 
 const router = express.Router();
 
@@ -19,8 +25,12 @@ router.post("/", createLead);
 router.get("/", getAllLeads);
 router.get("/:id", getLeadById);
 router.put("/:id", updateLead);
-router.patch("/:id/status", updateLeadStatus);
+router.put("/:id/status", updateLeadStatus);
 router.delete("/:id", deleteLead);
+
+router.post("/:leadId/notes", addNote);
+router.get("/:leadId/notes", getNotesByLead);
+router.delete("/notes/:noteId", deleteNote);
 
 
 
