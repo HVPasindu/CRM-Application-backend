@@ -122,10 +122,15 @@ const getAllLeads = async (req, res) => {
       assigned_salesperson,
       search,
       requirement,
+      page = 1,
+      limit = 6,
     } = req.query;
 
-    let query = `
-      SELECT *
+    const currentPage = Number(page);
+    const pageLimit = Number(limit);
+    const offset = (currentPage - 1) * pageLimit;
+
+    let whereQuery = `
       FROM leads
       WHERE 1 = 1
     `;
@@ -133,27 +138,27 @@ const getAllLeads = async (req, res) => {
     const values = [];
 
     if (status) {
-      query += ` AND status = ?`;
+      whereQuery += ` AND status = ?`;
       values.push(status);
     }
 
     if (lead_source) {
-      query += ` AND lead_source = ?`;
+      whereQuery += ` AND lead_source = ?`;
       values.push(lead_source);
     }
 
     if (assigned_salesperson) {
-      query += ` AND assigned_salesperson = ?`;
+      whereQuery += ` AND assigned_salesperson = ?`;
       values.push(assigned_salesperson);
     }
 
     if (requirement) {
-      query += ` AND requirement LIKE ?`;
+      whereQuery += ` AND requirement LIKE ?`;
       values.push(`%${requirement}%`);
     }
 
     if (search) {
-      query += `
+      whereQuery += `
         AND (
           lead_name LIKE ?
           OR company_name LIKE ?
@@ -170,13 +175,35 @@ const getAllLeads = async (req, res) => {
       );
     }
 
-    query += ` ORDER BY created_at DESC`;
+    const countQuery = `
+      SELECT COUNT(*) AS total
+      ${whereQuery}
+    `;
 
-    const [leads] = await pool.query(query, values);
+    const [countResult] = await pool.query(countQuery, values);
+    const totalLeads = countResult[0].total;
+    const totalPages = Math.ceil(totalLeads / pageLimit);
+
+    const dataQuery = `
+      SELECT *
+      ${whereQuery}
+      ORDER BY created_at DESC
+      LIMIT ? OFFSET ?
+    `;
+
+    const [leads] = await pool.query(dataQuery, [
+      ...values,
+      pageLimit,
+      offset,
+    ]);
 
     return res.status(200).json({
       success: true,
       count: leads.length,
+      totalLeads,
+      totalPages,
+      currentPage,
+      limit: pageLimit,
       leads,
     });
   } catch (error) {
