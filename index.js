@@ -3,6 +3,7 @@ const cors = require("cors");
 require("dotenv").config();
 
 const authRoutes = require("./routes/authRoutes");
+const leadRoutes = require("./routes/leadRoutes");
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/leads", leadRoutes);
 
 
 const PORT = process.env.PORT || 3000;
