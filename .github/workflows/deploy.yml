@@ -1,0 +1,50 @@
+name: Deploy Backend to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy Backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout latest code
+        uses: actions/checkout@v4
+
+      - name: Create SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/ec2_key
+          chmod 600 ~/.ssh/ec2_key
+
+      - name: Upload backend files to EC2
+        run: |
+          rsync -avz --delete \
+            --exclude "node_modules" \
+            --exclude ".git" \
+            --exclude ".github" \
+            --exclude ".env" \
+            -e "ssh -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no" \
+            ./ ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.BACKEND_PATH }}/
+
+      - name: Create .env file on EC2
+        run: |
+          echo "${{ secrets.BACKEND_ENV }}" > backend.env
+          scp -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no backend.env \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.BACKEND_PATH }}/.env
+
+      - name: Install dependencies and restart backend
+        run: |
+          ssh -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+              cd ${{ secrets.BACKEND_PATH }}
+
+              npm install
+
+              pm2 restart ${{ secrets.PM2_APP_NAME }} || pm2 start index.js --name ${{ secrets.PM2_APP_NAME }}
+
+              pm2 save
+          EOF
