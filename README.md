@@ -293,13 +293,13 @@ If I had more time, I would improve the backend by adding role-based permissions
 Frontend Repository:
 
 ```txt
-PASTE_FRONTEND_REPOSITORY_LINK_HERE
+https://github.com/HVPasindu/CRM-Application-frontend.git
 ```
 
 Demo Video:
 
 ```txt
-PASTE_DEMO_VIDEO_LINK_HERE
+https://drive.google.com/file/d/1hjZKpjI1R9dPEW1wyw46TxfpeGDykNkX/view?usp=sharing
 ```
 
 Deployed Frontend:
