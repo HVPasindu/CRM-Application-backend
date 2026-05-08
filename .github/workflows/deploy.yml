@@ -40,6 +40,13 @@ jobs:
         run: |
           ssh -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no \
             ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+
+              export NVM_DIR="$HOME/.nvm"
+
+              if [ -s "$NVM_DIR/nvm.sh" ]; then
+                . "$NVM_DIR/nvm.sh"
+              fi
+
               cd ${{ secrets.BACKEND_PATH }}
 
               npm install
@@ -47,4 +54,5 @@ jobs:
               pm2 restart ${{ secrets.PM2_APP_NAME }} || pm2 start index.js --name ${{ secrets.PM2_APP_NAME }}
 
               pm2 save
+
           EOF
